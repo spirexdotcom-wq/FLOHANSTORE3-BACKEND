@@ -44,13 +44,11 @@ app.post('/api/create-transaction', async (req, res) => {
             token: transaction.token,
             redirect_url: transaction.redirect_url
         });
-
 } catch (error) {
-    console.error("Gagal membuat transaksi:", error.ApiResponse || error.message || error);
-    res.status(500).json({ error: error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message });
-}
-
-
+    console.error("Gagal membuat transaksi:", error);
+    res.status(500).json({ error: error.message || JSON.stringify(error) });
+    }
+    
 // Menggunakan process.env.PORT yang disediakan oleh Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
