@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
 
@@ -44,6 +44,65 @@ app.post('/api/create-transaction', async (req, res) => {
     } catch (error) {
         console.error("Gagal membuat transaksi:", error);
         res.status(500).json({ error: error.message || JSON.stringify(error) });
+    }
+});
+// Endpoint untuk Membuat Transaksi iPaymu
+app.post('/api/ipaymu/create-transaction', async (req, res) => {
+    try {
+        const { order_id, gross_amount, customer_details, item_details } = req.body;
+
+        const va = process.env.IPAYMU_VA; 
+        const apiKey = process.env.IPAYMU_API_KEY;
+        const isProduction = false; 
+        const baseUrl = isProduction ? 'https://my.ipaymu.com/api/v2/payment' : 'https://sandbox.ipaymu.com/api/v2/payment';
+
+        const productName = item_details ? item_details.map(item => item.name) : ['Produk Flohan Store'];
+        const productQty = item_details ? item_details.map(item => item.quantity) : [1];
+        const productPrice = item_details ? item_details.map(item => item.price) : [gross_amount];
+
+        const body = {
+            product: productName,
+            qty: productQty,
+            price: productPrice,
+            returnUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
+            cancelUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
+            notifyUrl: 'https://flohanstore-3-backend.vercel.app/api/ipaymu/callback', 
+            referenceId: order_id || `FLOHAN-IPAYMU-${Date.now()}`,
+            buyerName: customer_details ? customer_details.first_name : 'Pelanggan Flohan',
+            buyerPhone: customer_details ? customer_details.phone : '08123456789',
+            buyerEmail: 'pelanggan@example.com'
+        };
+
+        const jsonBody = JSON.stringify(body);
+        const hashBody = crypto.createHash('sha256').update(jsonBody).digest('hex');
+        const stringToSign = `POST:${va}:${hashBody}:${apiKey}`;
+        const signature = crypto.createHmac('sha256', apiKey).update(stringToSign).digest('hex');
+
+        const response = await fetch(baseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'signature': signature,
+                'va': va
+            },
+            body: jsonBody
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            res.json({
+                success: true,
+                paymentUrl: result.data.url,
+                sessionId: result.data.sessionId
+            });
+        } else {
+            res.status(400).json({ success: false, error: result.message || 'Gagal membuat transaksi iPaymu' });
+        }
+
+    } catch (error) {
+        console.error("Gagal transaksi iPaymu:", error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
