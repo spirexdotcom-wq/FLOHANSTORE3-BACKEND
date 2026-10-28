@@ -53,12 +53,15 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
 
         const va = process.env.IPAYMU_VA; 
         const apiKey = process.env.IPAYMU_API_KEY;
-        const isProduction = false; 
+        const isProduction = false; // Karena menggunakan akun Sandbox iPaymu
+        
+        // URL Endpoint Sandbox iPaymu v2 yang benar
         const baseUrl = isProduction ? 'https://my.ipaymu.com/api/v2/payment' : 'https://sandbox.ipaymu.com/api/v2/payment';
 
-        const productName = item_details ? item_details.map(item => item.name) : ['Produk Flohan Store'];
-        const productQty = item_details ? item_details.map(item => item.quantity) : [1];
-        const productPrice = item_details ? item_details.map(item => item.price) : [gross_amount];
+        // Menyiapkan data produk sesuai format array iPaymu v2
+        const productName = item_details && item_details.length > 0 ? item_details.map(item => item.name) : ['Produk Flohan Store'];
+        const productQty = item_details && item_details.length > 0 ? item_details.map(item => item.quantity) : [1];
+        const productPrice = item_details && item_details.length > 0 ? item_details.map(item => item.price) : [gross_amount];
 
         const body = {
             product: productName,
@@ -70,14 +73,17 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
             referenceId: order_id || `FLOHAN-IPAYMU-${Date.now()}`,
             buyerName: customer_details ? customer_details.first_name : 'Pelanggan Flohan',
             buyerPhone: customer_details ? customer_details.phone : '08123456789',
-            buyerEmail: 'pelanggan@example.com'
+            buyerEmail: customer_details && customer_details.email ? customer_details.email : 'pelanggan@example.com',
+            format: 'json'
         };
 
+        // Signature Generation untuk iPaymu v2
         const jsonBody = JSON.stringify(body);
         const hashBody = crypto.createHash('sha256').update(jsonBody).digest('hex');
         const stringToSign = `POST:${va}:${hashBody}:${apiKey}`;
         const signature = crypto.createHmac('sha256', apiKey).update(stringToSign).digest('hex');
 
+        // Request ke API iPaymu
         const response = await fetch(baseUrl, {
             method: 'POST',
             headers: {
@@ -89,15 +95,19 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         });
 
         const result = await response.json();
+        console.log("Response iPaymu:", result);
 
-        if (result.success) {
+        if (result.success && result.data && result.data.url) {
             res.json({
                 success: true,
                 paymentUrl: result.data.url,
                 sessionId: result.data.sessionId
             });
         } else {
-            res.status(400).json({ success: false, error: result.message || 'Gagal membuat transaksi iPaymu' });
+            res.status(400).json({ 
+                success: false, 
+                error: result.message || 'Gagal membuat transaksi iPaymu dari server iPaymu' 
+            });
         }
 
     } catch (error) {
@@ -105,6 +115,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+            
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
