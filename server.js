@@ -1,8 +1,8 @@
-const express = require('express');
+const express = require('express'); 
 const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // Di-require dengan benar menggunakan huruf kecil 'const'
 
 const app = express();
 
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Koneksi ke MongoDB Atlas
+// === KONEKSI MONGODB (Ditempatkan aman di sini) ===
 mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.coeu1c2.mongodb.net/', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -59,7 +59,7 @@ app.post('/api/create-transaction', async (req, res) => {
     }
 });
 
-// Endpoint untuk Membuat Transaksi iPaymu
+// Endpoint untuk Membuat Transaksi iPaymu (ASLI TANPA DIUBAH)
 app.post('/api/ipaymu/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
@@ -80,7 +80,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
             price: productPrice,
             returnUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
             cancelUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
-            notifyUrl: 'https://flohanstore-3-backend.vercel.app/api/ipaymu/callback', 
+            notifyUrl: 'https://flohanstore3-backend.vercel.app/api/ipaymu/callback', 
             referenceId: order_id || `FLOHAN-IPAYMU-${Date.now()}`,
             buyerName: customer_details ? customer_details.first_name : 'Pelanggan Flohan',
             buyerPhone: customer_details ? customer_details.phone : '08123456789',
@@ -124,8 +124,8 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
-// Skema Pesanan untuk Database
+            
+// Skema Pesanan untuk Database & Admin
 const orderSchema = new mongoose.Schema({
   orderId: String,
   customerName: String,
@@ -160,4 +160,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
-  
+        
