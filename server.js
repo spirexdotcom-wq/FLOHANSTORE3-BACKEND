@@ -1,3 +1,15 @@
+const mongoose = require('mongoose');
+
+// Koneksi ke MongoDB Atlas
+mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.coeu1c2.mongodb.net/', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('MongoDB Terhubung dengan Aman!');
+}).catch(err => {
+  console.error('Koneksi MongoDB Gagal:', err);
+});
+
 const express = require('express'); const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
