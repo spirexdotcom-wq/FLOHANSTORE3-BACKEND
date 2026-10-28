@@ -1,8 +1,8 @@
-const express = require('express'); 
+const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
-const mongoose = require('mongoose'); // Di-require dengan benar menggunakan huruf kecil 'const'
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// === KONEKSI MONGODB (Ditempatkan aman di sini) ===
+// Koneksi MongoDB Atlas untuk Admin
 mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.coeu1c2.mongodb.net/', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -30,6 +30,7 @@ app.get('/', (req, res) => {
     res.send('Backend Flohan Store Aktif dan Stabil!');
 });
 
+// Endpoint Midtrans
 app.post('/api/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
@@ -59,7 +60,7 @@ app.post('/api/create-transaction', async (req, res) => {
     }
 });
 
-// Endpoint untuk Membuat Transaksi iPaymu (ASLI TANPA DIUBAH)
+// Endpoint iPaymu (Kembali menggunakan -3- sesuai awal)
 app.post('/api/ipaymu/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
@@ -80,7 +81,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
             price: productPrice,
             returnUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
             cancelUrl: 'https://spirexdotcom-wq.github.io/flohanstore3/', 
-            notifyUrl: 'https://flohanstore3-backend.vercel.app/api/ipaymu/callback', 
+            notifyUrl: 'https://flohanstore-3-backend.vercel.app/api/ipaymu/callback', 
             referenceId: order_id || `FLOHAN-IPAYMU-${Date.now()}`,
             buyerName: customer_details ? customer_details.first_name : 'Pelanggan Flohan',
             buyerPhone: customer_details ? customer_details.phone : '08123456789',
@@ -104,7 +105,6 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         });
 
         const result = await response.json();
-        console.log("Response iPaymu:", result);
 
         if (result.Success && result.Data && result.Data.Url) {
             res.json({
@@ -124,8 +124,8 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-            
-// Skema Pesanan untuk Database & Admin
+
+// Skema Pesanan MongoDB & Endpoint Admin
 const orderSchema = new mongoose.Schema({
   orderId: String,
   customerName: String,
@@ -135,7 +135,6 @@ const orderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model('Order', orderSchema);
 
-// API untuk Menerima Pesanan Baru
 app.post('/api/orders', async (req, res) => {
   try {
     const newOrder = new Order(req.body);
@@ -146,7 +145,6 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// API untuk Mengambil Semua Pesanan ke Halaman Admin
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
