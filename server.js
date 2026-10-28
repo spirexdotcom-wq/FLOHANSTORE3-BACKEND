@@ -4,39 +4,35 @@ const midtransClient = require('midtrans-client');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Inisialisasi Midtrans Snap API (mengambil kunci secara aman dari pengaturan Render)
 let snap = new midtransClient.Snap({
-    isProduction: false, // Ubah ke true jika sudah menggunakan akun Midtrans Asli/Live
+    isProduction: false,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
 
-// Endpoint Cek Server
 app.get('/', (req, res) => {
     res.send('Backend Flohan Store Aktif dan Stabil!');
 });
 
-// Endpoint untuk Membuat Transaksi Midtrans
 app.post('/api/create-transaction', async (req, res) => {
     try {
-        const { orderId, grossAmount, customerDetails, itemDetails } = req.body;
+        const { order_id, gross_amount, customer_details, item_details } = req.body;
 
         let parameter = {
             transaction_details: {
-                order_id: orderId || `FLOHAN-${Date.now()}`,
-                gross_amount: grossAmount
+                order_id: order_id || `FLOHAN-${Date.now()}`,
+                gross_amount: gross_amount
             },
-            customer_details: customerDetails || {
+            customer_details: customer_details || {
                 first_name: "Pelanggan Flohan",
                 email: "pelanggan@example.com",
                 phone: "08123456789"
             },
-            item_details: itemDetails || []
+            item_details: item_details || []
         };
 
         const transaction = await snap.createTransaction(parameter);
@@ -44,13 +40,15 @@ app.post('/api/create-transaction', async (req, res) => {
             token: transaction.token,
             redirect_url: transaction.redirect_url
         });
-} catch (error) {
-    console.error("Gagal membuat transaksi:", error);
-    res.status(500).json({ error: error.message || JSON.stringify(error) });
+
+    } catch (error) {
+        console.error("Gagal membuat transaksi:", error);
+        res.status(500).json({ error: error.message || JSON.stringify(error) });
     }
-    
-// Menggunakan process.env.PORT yang disediakan oleh Render
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
+    
