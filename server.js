@@ -1,4 +1,14 @@
+const express = require('express');
+const crypto = require('crypto');
+const cors = require('cors');
+const midtransClient = require('midtrans-client');
 const mongoose = require('mongoose');
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Koneksi ke MongoDB Atlas
 mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.coeu1c2.mongodb.net/', {
@@ -9,16 +19,6 @@ mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.
 }).catch(err => {
   console.error('Koneksi MongoDB Gagal:', err);
 });
-
-const express = require('express'); const crypto = require('crypto');
-const cors = require('cors');
-const midtransClient = require('midtrans-client');
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 let snap = new midtransClient.Snap({
     isProduction: false,
@@ -58,6 +58,7 @@ app.post('/api/create-transaction', async (req, res) => {
         res.status(500).json({ error: error.message || JSON.stringify(error) });
     }
 });
+
 // Endpoint untuk Membuat Transaksi iPaymu
 app.post('/api/ipaymu/create-transaction', async (req, res) => {
     try {
@@ -65,12 +66,10 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
 
         const va = process.env.IPAYMU_VA; 
         const apiKey = process.env.IPAYMU_API_KEY;
-        const isProduction = false; // Karena menggunakan akun Sandbox iPaymu
+        const isProduction = false; 
         
-        // URL Endpoint Sandbox iPaymu v2 yang benar
         const baseUrl = isProduction ? 'https://my.ipaymu.com/api/v2/payment' : 'https://sandbox.ipaymu.com/api/v2/payment';
 
-        // Menyiapkan data produk sesuai format array iPaymu v2
         const productName = item_details && item_details.length > 0 ? item_details.map(item => item.name) : ['Produk Flohan Store'];
         const productQty = item_details && item_details.length > 0 ? item_details.map(item => item.quantity) : [1];
         const productPrice = item_details && item_details.length > 0 ? item_details.map(item => item.price) : [gross_amount];
@@ -89,13 +88,11 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
             format: 'json'
         };
 
-        // Signature Generation untuk iPaymu v2
         const jsonBody = JSON.stringify(body);
         const hashBody = crypto.createHash('sha256').update(jsonBody).digest('hex');
         const stringToSign = `POST:${va}:${hashBody}:${apiKey}`;
         const signature = crypto.createHmac('sha256', apiKey).update(stringToSign).digest('hex');
 
-        // Request ke API iPaymu
         const response = await fetch(baseUrl, {
             method: 'POST',
             headers: {
@@ -109,7 +106,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         const result = await response.json();
         console.log("Response iPaymu:", result);
 
-                if (result.Success && result.Data && result.Data.Url) {
+        if (result.Success && result.Data && result.Data.Url) {
             res.json({
                 success: true,
                 paymentUrl: result.Data.Url,
@@ -120,16 +117,14 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
                 success: false, 
                 error: result.Message || 'Gagal membuat transaksi iPaymu' 
             });
-            }
-                
-        
+        }
 
     } catch (error) {
         console.error("Gagal transaksi iPaymu:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
-            
+
 // Skema Pesanan untuk Database
 const orderSchema = new mongoose.Schema({
   orderId: String,
@@ -165,4 +160,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
-    
+  
