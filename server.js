@@ -97,18 +97,19 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         const result = await response.json();
         console.log("Response iPaymu:", result);
 
-        if (result.success && result.data && result.data.url) {
+                if (result.Success && result.Data && result.Data.Url) {
             res.json({
                 success: true,
-                paymentUrl: result.data.url,
-                sessionId: result.data.sessionId
+                paymentUrl: result.Data.Url,
+                sessionId: result.Data.SessionID
             });
-                } else {
+        } else {
             res.status(400).json({ 
                 success: false, 
-                error: result.message || JSON.stringify(result) 
+                error: result.Message || 'Gagal membuat transaksi iPaymu' 
             });
-        }
+            }
+                
         
 
     } catch (error) {
