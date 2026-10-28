@@ -130,7 +130,37 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
     }
 });
             
+// Skema Pesanan untuk Database
+const orderSchema = new mongoose.Schema({
+  orderId: String,
+  customerName: String,
+  totalAmount: Number,
+  status: { type: String, default: 'Pending' },
+  createdAt: { type: Date, default: Date.now }
+});
+const Order = mongoose.model('Order', orderSchema);
 
+// API untuk Menerima Pesanan Baru
+app.post('/api/orders', async (req, res) => {
+  try {
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    res.status(201).json({ message: 'Pesanan berhasil disimpan!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// API untuk Mengambil Semua Pesanan ke Halaman Admin
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+  
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
