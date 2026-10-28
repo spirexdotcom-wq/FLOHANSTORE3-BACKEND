@@ -2,23 +2,12 @@ const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
-const mongoose = require('mongoose');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Koneksi MongoDB Atlas untuk Admin
-mongoose.connect('mongodb+srv://spirexdotcom_db_user:adminflohanstore3@cluster0.coeu1c2.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('MongoDB Terhubung dengan Aman!');
-}).catch(err => {
-  console.error('Koneksi MongoDB Gagal:', err);
-});
 
 let snap = new midtransClient.Snap({
     isProduction: false,
@@ -60,7 +49,7 @@ app.post('/api/create-transaction', async (req, res) => {
     }
 });
 
-// Endpoint iPaymu (Kembali menggunakan -3- sesuai awal)
+// Endpoint iPaymu (Dengan pengecekan huruf kapital yang benar)
 app.post('/api/ipaymu/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
@@ -106,6 +95,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
 
         const result = await response.json();
 
+        // Pengecekan menggunakan Huruf Kapital sesuai hasil sukses sebelumnya
         if (result.Success && result.Data && result.Data.Url) {
             res.json({
                 success: true,
@@ -125,37 +115,7 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
     }
 });
 
-// Skema Pesanan MongoDB & Endpoint Admin
-const orderSchema = new mongoose.Schema({
-  orderId: String,
-  customerName: String,
-  totalAmount: Number,
-  status: { type: String, default: 'Pending' },
-  createdAt: { type: Date, default: Date.now }
-});
-const Order = mongoose.model('Order', orderSchema);
-
-app.post('/api/orders', async (req, res) => {
-  try {
-    const newOrder = new Order(req.body);
-    await newOrder.save();
-    res.status(201).json({ message: 'Pesanan berhasil disimpan!' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/orders', async (req, res) => {
-  try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-  
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
-        
