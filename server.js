@@ -103,12 +103,13 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
                 paymentUrl: result.data.url,
                 sessionId: result.data.sessionId
             });
-        } else {
+                } else {
             res.status(400).json({ 
                 success: false, 
-                error: result.message || 'Gagal membuat transaksi iPaymu dari server iPaymu' 
+                error: result.message || JSON.stringify(result) 
             });
         }
+        
 
     } catch (error) {
         console.error("Gagal transaksi iPaymu:", error);
