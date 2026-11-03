@@ -114,17 +114,6 @@ app.post('/api/ipaymu/create-transaction', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// Endpoint sementara untuk cek IP Vercel
-app.get('/api/check-ip', async (req, res) => {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        res.json({ vercel_outbound_ip: data.ip });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-    
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
