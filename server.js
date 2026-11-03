@@ -1,4 +1,4 @@
-toconst express = require('express');
+const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
@@ -119,3 +119,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
+            
