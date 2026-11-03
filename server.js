@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
     res.send('Backend Flohan Store Aktif dan Stabil!');
 });
 
-// Endpoint Midtrans
+// Endpoint Midtrans (Tetap utuh)
 app.post('/api/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
@@ -49,14 +49,14 @@ app.post('/api/create-transaction', async (req, res) => {
     }
 });
 
-// Endpoint iPaymu (Dengan pengecekan huruf kapital yang benar)
+// Endpoint iPaymu (Diubah ke Mode Production)
 app.post('/api/ipaymu/create-transaction', async (req, res) => {
     try {
         const { order_id, gross_amount, customer_details, item_details } = req.body;
 
         const va = process.env.IPAYMU_VA; 
         const apiKey = process.env.IPAYMU_API_KEY;
-        const isProduction = false; 
+        const isProduction = true; // <-- Diubah ke true untuk mode Production
         
         const baseUrl = isProduction ? 'https://my.ipaymu.com/api/v2/payment' : 'https://sandbox.ipaymu.com/api/v2/payment';
 
